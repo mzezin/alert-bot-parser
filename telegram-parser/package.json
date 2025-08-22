@@ -1,0 +1,22 @@
+{
+  "name": "telegram-parser",
+  "version": "1.0.0",
+  "description": "Telegram messages parser",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.1",
+    "input": "^1.0.1",
+    "telegram": "^2.22.2"
+  },
+  "keywords": [
+    "telegram",
+    "parser"
+  ],
+  "author": "",
+  "license": "MIT"
+}
