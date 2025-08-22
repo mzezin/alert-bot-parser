@@ -3,39 +3,52 @@ import html2canvas from 'html2canvas';
 
 interface ExportPDFProps {
   chartRef: React.RefObject<HTMLDivElement | null>;
+  sessionsRef?: React.RefObject<HTMLDivElement | null>;
   data: {
-    totalMessages: number;
+    totalRecords: number;
+    totalSessions?: number;
     exportDate: string;
   };
 }
 
-export const ExportPDF = ({ chartRef, data }: ExportPDFProps) => {
+export const ExportPDF = ({ chartRef, sessionsRef }: ExportPDFProps) => {
   const exportToPDF = async () => {
     if (!chartRef.current) return;
 
     try {
-      const canvas = await html2canvas(chartRef.current, {
+      const pdf = new jsPDF('l', 'mm', 'a4');
+      const pdfWidth = 297;
+      
+      // Первый график - метрики по времени
+      const canvas1 = await html2canvas(chartRef.current, {
         scale: 2,
         useCORS: true,
         backgroundColor: '#ffffff',
       });
 
-      const imgData = canvas.toDataURL('image/png');
-      const pdf = new jsPDF('l', 'mm', 'a4');
+      const imgData1 = canvas1.toDataURL('image/png');
+      const imgWidth = pdfWidth - 20;
+      const imgHeight1 = (canvas1.height * imgWidth) / canvas1.width;
       
-      // Размеры A4 в landscape: 297x210mm
-      const pdfWidth = 297;
-      const pdfHeight = 210;
-      const imgWidth = pdfWidth - 20; // отступы
-      const imgHeight = (canvas.height * imgWidth) / canvas.width;
+      pdf.addImage(imgData1, 'PNG', 10, 10, imgWidth, Math.min(imgHeight1, 190));
 
-      pdf.text('Отчет по сообщениям Telegram', 20, 20);
-      pdf.text(`Дата экспорта: ${new Date(data.exportDate).toLocaleString('ru-RU')}`, 20, 30);
-      pdf.text(`Всего сообщений: ${data.totalMessages}`, 20, 40);
+      // Второй график на новой странице (если есть)
+      if (sessionsRef?.current) {
+        pdf.addPage();
+        
+        const canvas2 = await html2canvas(sessionsRef.current, {
+          scale: 2,
+          useCORS: true,
+          backgroundColor: '#ffffff',
+        });
 
-      pdf.addImage(imgData, 'PNG', 10, 50, imgWidth, imgHeight);
+        const imgData2 = canvas2.toDataURL('image/png');
+        const imgHeight2 = (canvas2.height * imgWidth) / canvas2.width;
+        
+        pdf.addImage(imgData2, 'PNG', 10, 10, imgWidth, Math.min(imgHeight2, 190));
+      }
 
-      pdf.save('telegram-messages-report.pdf');
+      pdf.save('pan-metrics-report.pdf');
     } catch (error) {
       console.error('Ошибка при экспорте в PDF:', error);
       alert('Ошибка при создании PDF');
